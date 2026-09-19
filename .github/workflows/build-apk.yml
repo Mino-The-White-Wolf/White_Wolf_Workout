@@ -1,7 +1,7 @@
 name: Build White Wolf Workout APK
 
 on:
-  workflow_dispatch: # Permet de déclencher la compilation manuellement via un bouton
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -15,6 +15,12 @@ jobs:
       - name: 📥 Récupération du code
         uses: actions/checkout@v4
 
+      - name: ☕ Configuration de Java (Requis pour le moteur Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: 🐍 Configuration de Python
         uses: actions/setup-python@v5
         with:
@@ -25,8 +31,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet pillow
 
-      - name: 🔨 Forge de l'APK (Shuri Tech)
-        run: flet build apk --project "White_Wolf_Workout" --org "com.shuritech.whitewolf"
+      - name: 🔨 Forge de l'APK (Validation automatique)
+        # L'ajout de "yes |" force la réponse "oui" à toutes les questions du terminal
+        run: yes | flet build apk --project "White_Wolf_Workout" --org "com.shuritech.whitewolf"
 
       - name: 🚀 Mise à disposition de l'APK
         uses: actions/upload-artifact@v4
