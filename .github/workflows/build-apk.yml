@@ -1,0 +1,35 @@
+name: Build White Wolf Workout APK
+
+on:
+  workflow_dispatch: # Permet de déclencher la compilation manuellement via un bouton
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Récupération du code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Configuration de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: ⚙️ Installation des dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet pillow
+
+      - name: 🔨 Forge de l'APK (Shuri Tech)
+        run: flet build apk --project "White_Wolf_Workout" --org "com.shuritech.whitewolf"
+
+      - name: 🚀 Mise à disposition de l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: White-Wolf-Workout-Android
+          path: build/apk/**/*.apk
