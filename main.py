@@ -6,6 +6,7 @@ from PIL import Image, ImageDraw
 import io
 import base64
 import os
+import json # Ajout du module JSON natif pour la sauvegarde
 
 # --- GÉNÉRATION DU BADGE WAKANDAIS (PNG SHURI TECH) ---
 def get_shuri_badge_b64():
@@ -28,8 +29,13 @@ def main(page: ft.Page):
     page.title = "White Wolf Workout"
     page.theme_mode = "dark" 
     page.bgcolor = "#0A0B10"
-    page.window_width = 410
-    page.window_height = 800
+    
+    # Sécurisation Flet 1.0 pour les dimensions fenêtrées (PC)
+    try:
+        page.window.width = 410
+        page.window.height = 800
+    except Exception:
+        pass
     
     page.padding = 0 
     page.scroll = None 
@@ -38,11 +44,19 @@ def main(page: ft.Page):
         "Beyno": "Beyno.ttf"
     }
 
-    # --- MÉMOIRE PERSISTANTE (CLIENT STORAGE) ---
+    # --- MÉMOIRE PERSISTANTE INDESTRUCTIBLE (JSON NATIF) ---
+    # Sur Android, "HOME" pointe vers le stockage interne sécurisé de l'application
+    data_dir = os.environ.get("HOME", os.path.abspath("."))
+    SAVE_FILE = os.path.join(data_dir, "white_wolf_data.json")
+
     def load_data():
-        data = page.client_storage.get("white_wolf_data")
-        if data:
-            return data
+        if os.path.exists(SAVE_FILE):
+            try:
+                with open(SAVE_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass # En cas de fichier corrompu, on recharge les données par défaut
+        
         # Données de départ par défaut
         return {
             "streak": 0,
@@ -52,12 +66,14 @@ def main(page: ft.Page):
             "history": {}
         }
 
-    # Chargement des données sauvegardées sur le téléphone
     user_data = load_data()
 
-    # Fonction de sauvegarde gravant les données en dur
     def save_data():
-        page.client_storage.set("white_wolf_data", user_data)
+        try:
+            with open(SAVE_FILE, "w", encoding="utf-8") as f:
+                json.dump(user_data, f, ensure_ascii=False, indent=4)
+        except Exception:
+            pass
 
 
     # --- DONNÉES & GESTION DU TEMPS ---
