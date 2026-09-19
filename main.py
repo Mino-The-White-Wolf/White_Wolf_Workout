@@ -26,7 +26,7 @@ SHURI_BADGE_BASE64 = get_shuri_badge_b64()
 
 def main(page: ft.Page):
     page.title = "White Wolf Workout"
-    page.theme_mode = "dark" # TUE LE GRIS WINDOWS DÈS LE LANCEMENT
+    page.theme_mode = "dark" 
     page.bgcolor = "#0A0B10"
     page.window_width = 410
     page.window_height = 800
@@ -38,20 +38,34 @@ def main(page: ft.Page):
         "Beyno": "Beyno.ttf"
     }
 
-    # --- DONNÉES & STATISTIQUES GLOBALES ---
+    # --- MÉMOIRE PERSISTANTE (CLIENT STORAGE) ---
+    def load_data():
+        data = page.client_storage.get("white_wolf_data")
+        if data:
+            return data
+        # Données de départ par défaut
+        return {
+            "streak": 0,
+            "completed_dates": [],
+            "total_skipped": 0,
+            "total_completed": 0,
+            "history": {}
+        }
+
+    # Chargement des données sauvegardées sur le téléphone
+    user_data = load_data()
+
+    # Fonction de sauvegarde gravant les données en dur
+    def save_data():
+        page.client_storage.set("white_wolf_data", user_data)
+
+
+    # --- DONNÉES & GESTION DU TEMPS ---
     today = datetime.date.today()
     start_of_week = today - datetime.timedelta(days=today.weekday())
 
     semaine_pattern = ["A", "B", "REPOS", "A", "B", "REPOS", "A"]
     noms_jours = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
-
-    user_data = {
-        "streak": 3,
-        "completed_dates": [],
-        "total_skipped": 0,
-        "total_completed": 0,
-        "history": {}
-    }
 
     citations = [
         "Le métal le plus solide se forge dans les flammes les plus chaudes.",
@@ -83,21 +97,17 @@ def main(page: ft.Page):
 
     etat = {"seance": "A", "index": 0, "temps": 40, "en_cours": False, "serie": 1, "phase": "effort", "session_log": []}
 
-    # Conteneurs dynamiques 
     accueil_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll="auto", expand=True)
     workout_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH, scroll="auto", expand=True)
 
     # ==========================================
     #   ARCHITECTURE BLINDÉE (CALQUES ABSOLUS)
     # ==========================================
-    
-    # 1. Le fond de teint increvable (Noir absolu, tiré aux 4 coins)
     bg_container = ft.Container(
         bgcolor="#0A0B10",
         left=0, top=0, right=0, bottom=0 
     )
     
-    # 2. Injection brutale de l'image JPG
     logo_src = None
     if os.path.exists("Logo White Wolf.jpg"):
         try:
@@ -111,16 +121,14 @@ def main(page: ft.Page):
         bg_container.content = ft.Image(
             src=logo_src,
             fit="contain",
-            opacity=0.04 # Ajuste l'opacité ici (ex: 0.06 pour plus visible)
+            opacity=0.04 
         )
 
-    # 3. La vitre par dessus (pour accueillir l'interface)
     fg_container = ft.Container(
         left=0, top=0, right=0, bottom=0,
         padding=15
     )
 
-    # 4. L'assemblage final
     root_stack = ft.Stack(
         controls=[bg_container, fg_container],
         expand=True
@@ -269,6 +277,8 @@ def main(page: ft.Page):
                     "seance": etat["seance"],
                     "exercices": list(etat["session_log"])
                 }
+        # SAUVEGARDE EN DUR DANS LE TÉLÉPHONE
+        save_data()
 
 
     # ==========================================
@@ -397,7 +407,9 @@ def main(page: ft.Page):
         etat["en_cours"] = False
         nom_exo = seances[etat["seance"]][etat["index"]]["nom"]
         etat["session_log"].append({"nom": nom_exo, "reps": 0, "statut": "skippé"})
+        
         user_data["total_skipped"] += 1
+        save_data() # SAUVEGARDE EN DUR
 
         marquer_exercice_fait(etat["index"], statut="skippé")
         etat["index"] += 1
@@ -430,7 +442,9 @@ def main(page: ft.Page):
 
             nom_exo = seances[etat["seance"]][etat["index"]]["nom"]
             etat["session_log"].append({"nom": nom_exo, "reps": reps_effectuees, "statut": "fait"})
+            
             user_data["total_completed"] += 1
+            save_data() # SAUVEGARDE EN DUR
 
             etat["phase"] = "repos"
             etat["temps"] = 20
