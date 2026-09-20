@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 import io
 import base64
 import os
-import json # Ajout du module JSON natif pour la sauvegarde
+import json
 
 # --- GÉNÉRATION DU BADGE WAKANDAIS (PNG SHURI TECH) ---
 def get_shuri_badge_b64():
@@ -30,7 +30,6 @@ def main(page: ft.Page):
     page.theme_mode = "dark" 
     page.bgcolor = "#0A0B10"
     
-    # Sécurisation Flet 1.0 pour les dimensions fenêtrées (PC)
     try:
         page.window.width = 410
         page.window.height = 800
@@ -45,7 +44,6 @@ def main(page: ft.Page):
     }
 
     # --- MÉMOIRE PERSISTANTE INDESTRUCTIBLE (JSON NATIF) ---
-    # Sur Android, "HOME" pointe vers le stockage interne sécurisé de l'application
     data_dir = os.environ.get("HOME", os.path.abspath("."))
     SAVE_FILE = os.path.join(data_dir, "white_wolf_data.json")
 
@@ -55,9 +53,8 @@ def main(page: ft.Page):
                 with open(SAVE_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
-                pass # En cas de fichier corrompu, on recharge les données par défaut
+                pass
         
-        # Données de départ par défaut
         return {
             "streak": 0,
             "completed_dates": [],
@@ -101,17 +98,20 @@ def main(page: ft.Page):
             {"nom": "1. Pompes", "detail": "Mains largeur d'épaules. Descends en gardant les coudes le long du corps à 45°."},
             {"nom": "2. Développé Militaire", "detail": "Pieds sur l'élastique. Poings aux clavicules. Pousse vers le plafond."},
             {"nom": "3. Écartés (Chest Fly)", "detail": "Élastique à la porte, tourne-lui le dos. Bras fléchis, referme-les devant ton sternum."},
-            {"nom": "4. Extensions Triceps", "detail": "Élastique à la porte, face à lui. Coudes plaqués aux côtes. Tire vers le bas."}
+            {"nom": "4. Extensions Triceps", "detail": "Élastique à la porte, face à lui. Coudes plaqués aux côtes. Tire vers le bas."},
+            {"nom": "5. Hip Thrust (Fessiers)", "detail": "Dos au sol, élastique tendu sur le bassin. Pousse sur les talons et contracte fort les fessiers au sommet."}
         ],
         "B": [
             {"nom": "1. Tirage Dos (Rowing)", "detail": "Assis, élastique derrière les pieds. Dos droit. Tire les coudes en arrière."},
             {"nom": "2. Band Pull-Apart", "detail": "Debout, bras tendus. Écarte les bras en croix pour ramener l'élastique sur la poitrine."},
             {"nom": "3. Curl Biceps", "detail": "Debout sur l'élastique. Coudes plaqués. Remonte les poings vers les épaules."},
-            {"nom": "4. Planche Commando", "detail": "Gainage sur les coudes. Monte sur la main droite, puis gauche, puis redescends."}
+            {"nom": "4. Planche Commando", "detail": "Gainage sur les coudes. Monte sur la main droite, puis gauche, puis redescends."},
+            {"nom": "5. Soulevé de terre (RDL)", "detail": "Debout sur l'élastique, penche le buste en avant (dos droit). Remonte en contractant fort les fessiers."}
         ]
     }
 
-    etat = {"seance": "A", "index": 0, "temps": 40, "en_cours": False, "serie": 1, "phase": "effort", "session_log": []}
+    # Timer recalibré à 30 secondes
+    etat = {"seance": "A", "index": 0, "temps": 30, "en_cours": False, "serie": 1, "phase": "effort", "session_log": []}
 
     accueil_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll="auto", expand=True)
     workout_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH, scroll="auto", expand=True)
@@ -124,23 +124,16 @@ def main(page: ft.Page):
         left=0, top=0, right=0, bottom=0 
     )
     
-    logo_src = None
-    if os.path.exists("Logo White Wolf.jpg"):
-        try:
-            with open("Logo White Wolf.jpg", "rb") as f:
-                b64_img = base64.b64encode(f.read()).decode("utf-8")
-                logo_src = f"data:image/jpeg;base64,{b64_img}"
-        except Exception:
-            pass
+    bg_container.content = ft.Image(
+        src="Logo White Wolf.jpg",
+        fit=ft.ImageFit.CONTAIN,
+        opacity=0.06 
+    )
 
-    if logo_src:
-        bg_container.content = ft.Image(
-            src=logo_src,
-            fit="contain",
-            opacity=0.04 
-        )
+    safe_area_wrapper = ft.SafeArea(expand=True)
 
     fg_container = ft.Container(
+        content=safe_area_wrapper,
         left=0, top=0, right=0, bottom=0,
         padding=15
     )
@@ -276,7 +269,7 @@ def main(page: ft.Page):
             ft.Container(height=20)
         ])
         
-        fg_container.content = accueil_view
+        safe_area_wrapper.content = accueil_view
         page.update()
 
     def valider_journee_repos(e):
@@ -293,7 +286,6 @@ def main(page: ft.Page):
                     "seance": etat["seance"],
                     "exercices": list(etat["session_log"])
                 }
-        # SAUVEGARDE EN DUR DANS LE TÉLÉPHONE
         save_data()
 
 
@@ -316,7 +308,8 @@ def main(page: ft.Page):
     ], alignment=ft.MainAxisAlignment.CENTER)
 
     citation_txt = ft.Text("", size=14, color="#FFD700", italic=True, text_align="center", visible=False)
-    chrono_txt = ft.Text("40", size=70, weight="bold", color="#7B2CBF", font_family="Consolas")
+    # Timer initialisé sur 30s
+    chrono_txt = ft.Text("30", size=70, weight="bold", color="#7B2CBF", font_family="Consolas")
     
     btn_play = ft.Button(content="LANCER", bgcolor="#7B2CBF", color="white")
     btn_pause = ft.Button(content="PAUSE", disabled=True, bgcolor="#2A2D3A", color="white")
@@ -325,7 +318,12 @@ def main(page: ft.Page):
     
     btn_abort = ft.Button(content="ABANDONNER / RETOUR QG", on_click=lambda e: afficher_accueil(), bgcolor="#141722", color="#8B95A5")
     
-    controle_row = ft.Row([btn_play, btn_pause, btn_skip, btn_next], alignment=ft.MainAxisAlignment.CENTER, spacing=6)
+    controle_row = ft.Row(
+        [btn_play, btn_pause, btn_skip, btn_next], 
+        alignment=ft.MainAxisAlignment.CENTER, 
+        spacing=6,
+        wrap=True
+    )
     abort_row = ft.Row([btn_abort], alignment=ft.MainAxisAlignment.CENTER)
 
     def charger_checklist():
@@ -425,7 +423,7 @@ def main(page: ft.Page):
         etat["session_log"].append({"nom": nom_exo, "reps": 0, "statut": "skippé"})
         
         user_data["total_skipped"] += 1
-        save_data() # SAUVEGARDE EN DUR
+        save_data() 
 
         marquer_exercice_fait(etat["index"], statut="skippé")
         etat["index"] += 1
@@ -438,7 +436,7 @@ def main(page: ft.Page):
             else:
                 reinitialiser_checklist()
         etat["phase"] = "effort"
-        etat["temps"] = 40
+        etat["temps"] = 30 # Réinitialisation à 30s
         chrono_txt.color = "#7B2CBF"
         btn_play.disabled = False
         btn_pause.disabled = True
@@ -460,10 +458,10 @@ def main(page: ft.Page):
             etat["session_log"].append({"nom": nom_exo, "reps": reps_effectuees, "statut": "fait"})
             
             user_data["total_completed"] += 1
-            save_data() # SAUVEGARDE EN DUR
+            save_data() 
 
             etat["phase"] = "repos"
-            etat["temps"] = 20
+            etat["temps"] = 15 # 15 secondes de repos
             chrono_txt.color = "#00F0FF"
         else:
             marquer_exercice_fait(etat["index"], statut="fait")
@@ -479,7 +477,7 @@ def main(page: ft.Page):
                     reinitialiser_checklist()
                     
             etat["phase"] = "effort"
-            etat["temps"] = 40
+            etat["temps"] = 30 # 30 secondes d'effort
             chrono_txt.color = "#7B2CBF"
             exo_titre.font_family = "Consolas"
             
@@ -494,7 +492,7 @@ def main(page: ft.Page):
         
         etat["seance"] = seance_id
         etat["index"] = 0
-        etat["temps"] = 40
+        etat["temps"] = 30 # Démarrage à 30s
         etat["en_cours"] = False
         etat["serie"] = 1
         etat["phase"] = "effort"
@@ -527,10 +525,9 @@ def main(page: ft.Page):
         ])
         
         update_ui_workout()
-        fg_container.content = workout_view
+        safe_area_wrapper.content = workout_view
         page.update()
 
-    # Démarrage direct
     afficher_accueil()
 
 ft.run(main)
