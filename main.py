@@ -113,8 +113,8 @@ def main(page: ft.Page):
     # Timer recalibré à 30 secondes
     etat = {"seance": "A", "index": 0, "temps": 30, "en_cours": False, "serie": 1, "phase": "effort", "session_log": []}
 
-    accueil_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll="auto", expand=True)
-    workout_view = ft.Column(horizontal_alignment=ft.CrossAxisAlignment.STRETCH, scroll="auto", expand=True)
+    accueil_view = ft.Column(horizontal_alignment="center", scroll="auto", expand=True)
+    workout_view = ft.Column(horizontal_alignment="stretch", scroll="auto", expand=True)
 
     # ==========================================
     #   ARCHITECTURE BLINDÉE (CALQUES ABSOLUS)
@@ -126,7 +126,7 @@ def main(page: ft.Page):
     
     bg_container.content = ft.Image(
         src="Logo White Wolf.jpg",
-        fit=ft.ImageFit.CONTAIN,
+        fit="contain", # Remplacement du module par le texte brut pour sécuriser la compilation
         opacity=0.06 
     )
 
@@ -176,11 +176,11 @@ def main(page: ft.Page):
                     ft.Text(f"⚡ {user_data['total_skipped']}", size=13, weight="bold", color="#FF9900", font_family="Consolas"),
                     ft.Text("Skippés", size=9, color="#8B95A5")
                 ], alignment="center", horizontal_alignment="center"),
-            ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
+            ], alignment="spaceAround"),
             bgcolor="#141722", padding=10, border_radius=12, width=370
         )
 
-        cal_row = ft.Row(alignment=ft.MainAxisAlignment.CENTER, spacing=5)
+        cal_row = ft.Row(alignment="center", spacing=5)
         for i in range(7):
             d = start_of_week + datetime.timedelta(days=i)
             d_str = d.strftime("%Y-%m-%d")
@@ -244,7 +244,7 @@ def main(page: ft.Page):
                         ft.Row([
                             ft.Text(f"DATE: {date_key}", size=11, weight="bold", color="#00F0FF", font_family="Consolas"),
                             ft.Text(f"SÉANCE {log['seance']}", size=11, weight="bold", color="#FFD700", font_family="Beyno")
-                        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                        ], alignment="spaceBetween"),
                         ft.Text(f"Mouvements validés : {nb_exos}", size=11, color="#8B95A5", font_family="Consolas")
                     ], spacing=2),
                     bgcolor="#141722", padding=10, border_radius=8
@@ -305,7 +305,7 @@ def main(page: ft.Page):
     reps_row = ft.Row([
         ft.Text("Répétitions réalisées :", size=12, color="#8B95A5"),
         reps_input
-    ], alignment=ft.MainAxisAlignment.CENTER)
+    ], alignment="center")
 
     citation_txt = ft.Text("", size=14, color="#FFD700", italic=True, text_align="center", visible=False)
     # Timer initialisé sur 30s
@@ -320,11 +320,11 @@ def main(page: ft.Page):
     
     controle_row = ft.Row(
         [btn_play, btn_pause, btn_skip, btn_next], 
-        alignment=ft.MainAxisAlignment.CENTER, 
+        alignment="center", 
         spacing=6,
         wrap=True
     )
-    abort_row = ft.Row([btn_abort], alignment=ft.MainAxisAlignment.CENTER)
+    abort_row = ft.Row([btn_abort], alignment="center")
 
     def charger_checklist():
         checklist_lignes.clear()
@@ -436,7 +436,7 @@ def main(page: ft.Page):
             else:
                 reinitialiser_checklist()
         etat["phase"] = "effort"
-        etat["temps"] = 30 # Réinitialisation à 30s
+        etat["temps"] = 30 
         chrono_txt.color = "#7B2CBF"
         btn_play.disabled = False
         btn_pause.disabled = True
@@ -461,7 +461,7 @@ def main(page: ft.Page):
             save_data() 
 
             etat["phase"] = "repos"
-            etat["temps"] = 15 # 15 secondes de repos
+            etat["temps"] = 15 
             chrono_txt.color = "#00F0FF"
         else:
             marquer_exercice_fait(etat["index"], statut="fait")
@@ -477,7 +477,7 @@ def main(page: ft.Page):
                     reinitialiser_checklist()
                     
             etat["phase"] = "effort"
-            etat["temps"] = 30 # 30 secondes d'effort
+            etat["temps"] = 30 
             chrono_txt.color = "#7B2CBF"
             exo_titre.font_family = "Consolas"
             
@@ -492,7 +492,7 @@ def main(page: ft.Page):
         
         etat["seance"] = seance_id
         etat["index"] = 0
-        etat["temps"] = 30 # Démarrage à 30s
+        etat["temps"] = 30 
         etat["en_cours"] = False
         etat["serie"] = 1
         etat["phase"] = "effort"
@@ -510,14 +510,14 @@ def main(page: ft.Page):
         
         charger_checklist()
         workout_view.controls.extend([
-            ft.Row([titre_seance, serie_txt], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+            ft.Row([titre_seance, serie_txt], alignment="spaceBetween"),
             ft.Divider(color="#2A2D3A"),
             checklist_ui,
             ft.Container(
-                content=ft.Column([exo_titre, exo_detail, reps_row, citation_txt], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=6), 
+                content=ft.Column([exo_titre, exo_detail, reps_row, citation_txt], horizontal_alignment="center", spacing=6), 
                 padding=16, bgcolor="#141722", border_radius=12, margin=10
             ),
-            ft.Row([chrono_txt], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Row([chrono_txt], alignment="center"),
             ft.Container(height=5),
             controle_row,
             ft.Container(height=5),
