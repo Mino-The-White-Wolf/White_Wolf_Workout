@@ -110,7 +110,6 @@ def main(page: ft.Page):
         ]
     }
 
-    # Timer recalibré à 30 secondes
     etat = {"seance": "A", "index": 0, "temps": 30, "en_cours": False, "serie": 1, "phase": "effort", "session_log": []}
 
     accueil_view = ft.Column(horizontal_alignment="center", scroll="auto", expand=True)
@@ -126,11 +125,15 @@ def main(page: ft.Page):
     
     bg_container.content = ft.Image(
         src="Logo White Wolf.jpg",
-        fit="contain", # Remplacement du module par le texte brut pour sécuriser la compilation
+        fit="contain",
         opacity=0.06 
     )
 
-    safe_area_wrapper = ft.SafeArea(expand=True)
+    # Le conteneur relais qui changera de vue
+    view_container = ft.Container(expand=True)
+
+    # SafeArea initialisé avec son contenu obligatoire
+    safe_area_wrapper = ft.SafeArea(content=view_container, expand=True)
 
     fg_container = ft.Container(
         content=safe_area_wrapper,
@@ -269,7 +272,7 @@ def main(page: ft.Page):
             ft.Container(height=20)
         ])
         
-        safe_area_wrapper.content = accueil_view
+        view_container.content = accueil_view
         page.update()
 
     def valider_journee_repos(e):
@@ -308,7 +311,6 @@ def main(page: ft.Page):
     ], alignment="center")
 
     citation_txt = ft.Text("", size=14, color="#FFD700", italic=True, text_align="center", visible=False)
-    # Timer initialisé sur 30s
     chrono_txt = ft.Text("30", size=70, weight="bold", color="#7B2CBF", font_family="Consolas")
     
     btn_play = ft.Button(content="LANCER", bgcolor="#7B2CBF", color="white")
@@ -525,7 +527,7 @@ def main(page: ft.Page):
         ])
         
         update_ui_workout()
-        safe_area_wrapper.content = workout_view
+        view_container.content = workout_view
         page.update()
 
     afficher_accueil()
